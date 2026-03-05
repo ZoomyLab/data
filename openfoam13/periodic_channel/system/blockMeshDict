@@ -1,0 +1,80 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/Parameters"
+convertToMeters 1;
+
+vertices
+(
+    ($xMin #calc "$yMin + $dy" $zMin) // 0
+    ($xMax $yMin $zMin) // 1
+    (#calc "$xMax + ($yMax - $yMin) * $dy" $yMax $zMin) // 2
+    (#calc "$xMin + ($yMax - $yMin) * $dy" #calc "$yMax + $dy" $zMin) // 3
+    ($xMin #calc "$yMin + $dy" $zMax) // 4
+    ($xMax $yMin $zMax) // 5
+    (#calc "$xMax + ($yMax - $yMin) * $dy" $yMax $zMax) // 6
+    (#calc "$xMin + ($yMax - $yMin) * $dy" #calc "$yMax + $dy" $zMax) // 7
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) ($nx $ny $nz) simpleGrading (1 10 1)
+);
+
+edges ();
+
+boundary
+(
+    inlet
+    {
+        type cyclic;
+        neighbourPatch outlet;
+        faces ((0 4 7 3));
+    }
+    outlet
+    {
+        type cyclic;
+        neighbourPatch inlet;
+        faces ((1 2 6 5));
+    }
+    //inlet
+    //{
+    //    type patch;
+    //    faces ((0 4 7 3));
+    //}
+    //outlet
+    //{
+    //    type patch;
+    //    faces ((1 2 6 5));
+    //}
+    bottom
+    {
+        type wall;
+        faces ((0 1 5 4));
+    }
+    top
+    {
+        type patch;
+        faces ((3 7 6 2));
+    }
+    frontAndBack
+    {
+        type empty;
+        faces ((0 3 2 1) (4 5 6 7));
+    }
+);
+
+// ************************************************************************* //

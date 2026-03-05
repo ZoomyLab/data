@@ -1,0 +1,96 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  11
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volScalarField;
+    object      alpha.water;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/Parameters"
+dimensions      [0 0 0 0 0 0 0];
+
+#codeStream
+{
+        codeInclude
+        #{
+                #include "fvMesh.H"
+        #};
+
+        codeOptions
+        #{
+                -I$(LIB_SRC)/finiteVolume/lnInclude \
+                -I$(LIB_SRC)/meshTools/lnInclude
+        #};
+
+        codeLibs
+        #{
+                -lfiniteVolume -lmeshTools
+        #};
+	code
+        #{
+                const IOdictionary& d = static_cast<const IOdictionary&>(dict);
+                const fvMesh& mesh = refCast<const fvMesh>(d.db());
+
+                const vectorField& cellMidpoints = mesh.cellCentres();
+                const scalarField y(cellMidpoints.component(vector::Y));
+                const scalarField x(cellMidpoints.component(vector::X));
+
+                // Parameters for the bell curve
+                scalar A = $gauss_amplitude;      // Peak height of the bump above the base level
+                scalar x0 = $gauss_position;     // Center position of the bump (m)
+                scalar sigma = $gauss_width;  // Width parameter (standard deviation)
+
+		scalarField alpha(y.size(), 0);
+                forAll(alpha, i)
+                {
+                    // 1. Calculate the base water height (including your slope/tilt logic)
+                    scalar baseHeight = $waterHeight + ($dy * (1 - (x[i] - $xMin) / ($xMax - $xMin)));
+                
+                    // 2. Calculate the bell curve offset at this x-position
+                    // Formula: A * exp( - (x - x0)^2 / (2 * sigma^2) )
+                    scalar bump = A * Foam::exp(-Foam::sqr(x[i] - x0) / (2.0 * Foam::sqr(sigma)));
+                
+                    // 3. Set alpha to 1 if the y-coordinate is below the combined height
+                    if (y[i] < (baseHeight + bump))
+                    {
+                        alpha[i] = 1;
+                    }
+                    else
+                    {
+                        alpha[i] = 0;
+                    }
+                }
+
+                writeEntry(os, "internalField", alpha);
+        #};
+};
+
+boundaryField
+{
+    //inlet           { type cyclic; }
+    //outlet          { type cyclic; }
+    inlet          { type zeroGradient; }
+    outlet          { type zeroGradient; }
+    //inlet
+    //{
+    //    type            mapped;
+    //    patch           outlet;   // Look at the outlet
+    //    setAverage      off;      // Copy the exact profile, don't average it
+    //}
+    //outlet
+    //{
+    //    type            zeroGradient; 
+    //}
+    bottom          { type fixedValue; value uniform 1; }
+    top             { type zeroGradient; }
+    frontAndBack    { type empty; }
+}
+
+// ************************************************************************* //
