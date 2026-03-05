@@ -1,0 +1,19 @@
+rm -r 0.[0-9]* [1-9]* 2>/dev/null
+rm -rf postProcessing
+
+deepclean="False"
+for arg in "$@"; do
+    if [ "$arg" = "deep=True" ]; then
+        deepclean="True"
+    fi
+done
+
+if [ "$deepclean" = "True" ]; then
+    echo "Cleaning any recreatable directories (dynamicCode, polyMesh, VTK) ..."
+    rm -rf dynamicCode
+    rm -rf VTK
+    rm -rf constant/polyMesh
+    rm -rf .cache
+else
+    echo "In order to clean any recreatable directories (dynamicCode, polyMesh, VTK, ...), use deep=True."
+fi

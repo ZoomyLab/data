@@ -1,0 +1,46 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  12
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      fvModels;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//slopeGravity
+//{
+//    type            coded;
+//    selectionMode   all;
+//    field           U;
+//    name            slopeGravity;
+//
+//    codeInclude
+//    #{
+//        #include "volFields.H"
+//    #};
+//
+//    codeAddSup
+//    #{
+//        const volScalarField& rho = mesh().lookupObject<volScalarField>("rho");
+//        const volScalarField& alpha = mesh().lookupObject<volScalarField>("alpha");
+//        const scalar gx = 1.;
+//        eqn += alpha * rho * 100000000. * gx * vector(1, 0, 0);
+//    #};
+//}
+//gravity
+//{
+//    type            acceleration;
+//    selectionMode   all;
+//    field           U;
+//    velocity        constant (335500 0 0); // 9.81 * sin(20)
+//}
+
+// ************************************************************************* //
