@@ -1,0 +1,52 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  11
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+#include "$FOAM_CASE/Parameters"
+dimensions      [ 0 1 -1 0 0 0 0 ];
+
+internalField   uniform ( 0 0 0 );
+
+boundaryField
+{
+    inlet           { type cyclic; }
+    outlet          { type cyclic; }
+    //inlet           { type zeroGradient; }
+    //outlet          { type zeroGradient; }
+    //inlet
+    //{
+    //    type            mapped;
+    //    patch           outlet;   // Look at the outlet
+    //    setAverage      off;      // Copy the exact profile, don't average it
+    //}
+    //outlet
+    //{
+    //    type            zeroGradient; 
+    //}
+    "bottom.*"          { type fixedValue; value uniform (0 0 0); }
+    top             { type slip; }
+    frontAndBack    { type empty; }
+}
+
+//sources
+//{
+//    gravity
+//    {
+//        type            uniformFixedValue;
+//        uniformValue    (-10 0 0);
+//    }
+//}
+
+// ************************************************************************* //
