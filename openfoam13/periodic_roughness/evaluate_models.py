@@ -11,22 +11,36 @@ from learn_closure import (
 )
 
 
-def evaluate_classical_models(data):
-    nut = data["nut"]
-    k = data["k"]
-    omega = data["omega"]
+def evaluate_classical_models(data, t_slice=slice(None)):
+    """
+    Evaluates closures over a specified time slice.
+    Defaults to slice(None) to evaluate all available time steps.
+    """
+    nut = data["nut"][t_slice]
+    k = data["k"][t_slice]
+    omega = data["omega"][t_slice]
+    dU_dy = data["dU_dy"][t_slice]
     eta = data["z"]
-    h = data["h"][:, :, None]
-    u_star = data["ustar"][:, :, None]
 
-    y_physical = h * eta
+    # Extract geometry/friction and dynamically add the Z-axis for broadcasting
+    h_raw = data["h"][t_slice]
+    ustar_raw = data["ustar"][t_slice]
+
+    if h_raw.ndim == 2:  # Shape is [Time, Space]
+        h_bcast = h_raw[:, :, np.newaxis]
+        ustar_bcast = ustar_raw[:, :, np.newaxis]
+    else:  # Shape is [Space] (if a single integer index was used)
+        h_bcast = h_raw[:, np.newaxis]
+        ustar_bcast = ustar_raw[:, np.newaxis]
+
+    y_physical = h_bcast * eta
 
     # 1. Parabolic Model
-    nut_para = 0.41 * u_star * h * eta * (1.0 - eta)
+    nut_para = 0.41 * ustar_bcast * h_bcast * eta * (1.0 - eta)
 
-    # 2. Elder Model
-    nut_elder_base = (0.41 / 6.0) * u_star * h
-    nut_elder = np.repeat(nut_elder_base, nut.shape[2], axis=2)
+    # 2. Elder Model (Repeat along the Z-axis, which is always axis=-1)
+    nut_elder_base = (0.41 / 6.0) * ustar_bcast * h_bcast
+    nut_elder = np.repeat(nut_elder_base, nut.shape[-1], axis=-1)
 
     # 3. 1-Equation Practical Outcome (Prandtl)
     kappa, C_mu = 0.41, 0.548
@@ -34,29 +48,47 @@ def evaluate_classical_models(data):
     L = kappa * y_physical * np.sqrt(safe_1_minus_eta)
     nut_from_k_prandtl = C_mu * np.sqrt(np.maximum(k, 0.0)) * L
 
-    # 4. 2-Equation Practical Outcome (Wilcox k-omega)
-    # The classical closure is simply nu_t = k / omega
+    # 4. Standard 2-Equation (Wilcox k-omega)
     safe_omega = np.maximum(omega, 1e-10)
-    nut_from_k_omega = np.maximum(k, 0.0) / safe_omega
+    safe_k = np.maximum(k, 0.0)
+    nut_from_k_omega = safe_k / safe_omega
+
+    # --- 5. Menter's SST Limiter ---
+    a1 = 0.31
+    S = np.abs(dU_dy)
+    sst_denominator = np.maximum(safe_omega, S / a1)
+    nut_sst = safe_k / sst_denominator
+
+    # Trim boundaries along the Z-axis (which is always the last axis)
+    trim = slice(1, -1)
+
+    # The '...' operator correctly handles both 2D and 3D arrays!
+    nut_eval = nut[..., trim].flatten()
+    nut_para_eval = nut_para[..., trim].flatten()
+    nut_elder_eval = nut_elder[..., trim].flatten()
+    nut_prandtl_eval = nut_from_k_prandtl[..., trim].flatten()
+    nut_k_omega_eval = nut_from_k_omega[..., trim].flatten()
+    nut_sst_eval = nut_sst[..., trim].flatten()
 
     print(
-        f"\n{'=' * 60}\nEVALUATING ALGEBRAIC CLOSURES FOR nu_t (PRACTICAL OUTCOME)\n{'=' * 60}"
+        f"\n{'=' * 60}\nEVALUATING ALGEBRAIC CLOSURES FOR nu_t (t_slice={t_slice})\n{'=' * 60}"
     )
     print(
-        f"Data Sanity Check: Avg Depth (h) = {np.mean(h):.4f} m, Avg U_* = {np.mean(u_star):.4f} m/s"
+        f"Data Sanity Check: Avg Depth (h) = {np.mean(h_raw):.4f} m, Avg U_* = {np.mean(ustar_raw):.4f} m/s"
+    )
+    print(f"[DEBUG] Max Physical nu_t:      {np.max(nut_eval):.5f}")
+    print(f"[DEBUG] Max Raw k/omega nu_t:   {np.max(nut_k_omega_eval):.5f}")
+    print(f"[DEBUG] Max SST Limited nu_t:   {np.max(nut_sst_eval):.5f}")
+
+    print(f"1. Parabolic R^2              : {r2_score(nut_eval, nut_para_eval):+.4f}")
+    print(f"2. Elder Model R^2            : {r2_score(nut_eval, nut_elder_eval):+.4f}")
+    print(
+        f"3. 1-Eq (Prandtl) R^2         : {r2_score(nut_eval, nut_prandtl_eval):+.4f}"
     )
     print(
-        f"1. Parabolic R^2              : {r2_score(nut.flatten(), nut_para.flatten()):+.4f}"
+        f"4. 2-Eq (Raw k-omega) R^2     : {r2_score(nut_eval, nut_k_omega_eval):+.4f}"
     )
-    print(
-        f"2. Elder Model R^2            : {r2_score(nut.flatten(), nut_elder.flatten()):+.4f}"
-    )
-    print(
-        f"3. 1-Eq (Prandtl) R^2         : {r2_score(nut.flatten(), nut_from_k_prandtl.flatten()):+.4f}"
-    )
-    print(
-        f"4. 2-Eq (k-omega) R^2         : {r2_score(nut.flatten(), nut_from_k_omega.flatten()):+.4f}"
-    )
+    print(f"5. 2-Eq (SST Limited) R^2     : {r2_score(nut_eval, nut_sst_eval):+.4f}")
     print("=" * 60)
 
 
