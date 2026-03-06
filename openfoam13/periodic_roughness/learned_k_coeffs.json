@@ -1,0 +1,20 @@
+{
+    "nut * (dU_dy)^2": 0.3981379351257845,
+    "[nut * (dU_dy)^2] * eta": 0.11034282515935398,
+    "[nut * (dU_dy)^2] * (1-eta)": 0.0,
+    "+ nut * d2k_dy2": 0.0,
+    "[+ nut * d2k_dy2] * eta": 1.4472732350787942,
+    "[+ nut * d2k_dy2] * (1-eta)": 0.0,
+    "- nut * d2k_dy2": 0.0,
+    "[- nut * d2k_dy2] * eta": 0.0,
+    "[- nut * d2k_dy2] * (1-eta)": 0.13790058764607846,
+    "+ dnut_dy * dk_dy": 0.0,
+    "[+ dnut_dy * dk_dy] * eta": 1.0547429343500268,
+    "[+ dnut_dy * dk_dy] * (1-eta)": 0.0,
+    "- dnut_dy * dk_dy": 0.0,
+    "[- dnut_dy * dk_dy] * eta": 0.0,
+    "[- dnut_dy * dk_dy] * (1-eta)": 1.8163937597325996,
+    "- k * omega": 0.046270769196086886,
+    "[- k * omega] * eta": 0.0,
+    "[- k * omega] * (1-eta)": 0.0
+}
