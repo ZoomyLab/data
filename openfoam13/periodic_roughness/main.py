@@ -83,9 +83,9 @@ if __name__ == "__main__":
     # ax.plot(timeline, f_beta(timeline, popt))
     # fig.savefig("beta.svg")
 
-    times = range(1, sim.size(), 100)
+    times = range(100, sim.size(), 10)
 
-    data = load_or_build_data(sim, times, n_stations=20, n_eta=20)
+    data = load_or_build_data(sim, times, n_stations=40, n_eta=50)
     # train_3d_pde_operator("data.npz", alpha=0.01)
     # train_k_pde_operator("data.npz", alpha=0.001)
     # train_2eq_model(alpha_k=0.01, alpha_omega=0.01, ode=True)
@@ -93,10 +93,10 @@ if __name__ == "__main__":
     evaluate_classical_models(data)
 
     fig, axs = plt.subplots(2, 2, figsize=(15, 6), sharey=True)
-    t0 = len(times) // 8
-    t1 = 7 * len(times) // 8
-    x0 = 5
-    x1 = 15
+    t0 = len(times) // 3
+    t1 = 2 * len(times) // 8
+    x0 = 15
+    x1 = 25
     for it, t in enumerate([t0, t1]):
         for ix, x in enumerate([x0, x1]):
             # plot_algebraic_models(axs[it,ix], data, t_idx=t, x_idx=x )
