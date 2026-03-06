@@ -1,0 +1,13 @@
+waterHeight 0.9;
+
+dy 0;
+xMin 0;
+xMax 20;
+yMin 0;
+yMax 2;
+zMin 0;
+zMax 0.1; 
+
+nx 200;
+ny 50;
+nz 1;     
