@@ -3,5 +3,7 @@
 [1-9]* 
 VTK
 __pycache__
-dynamic_code
+dynamicCode
 polyMesh
+postProcessing
+
