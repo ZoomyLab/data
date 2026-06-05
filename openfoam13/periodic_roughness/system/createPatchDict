@@ -1,11 +1,25 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
 FoamFile { version 2.0; format ascii; class dictionary; object createPatchDict; }
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// OF13: build the rough wall patch directly from an inline face zone
+// (thin box on the bottom boundary, x in [5,15]). Replaces the deprecated
+// topoSet faceSet workflow; produces an identical bottom_rough patch.
 pointSync false;
 patches
 (
     {
         name        bottom_rough;
         patchInfo   { type wall; }
-        constructFrom set;
-        set         roughFaces;
+        constructFrom zone;
+        zone { type box; box (5 -1e-3 -1) (15 1e-3 1); }
     }
 );
+
+// ************************************************************************* //
